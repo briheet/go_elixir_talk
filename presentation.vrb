@@ -1,0 +1,24 @@
+\frametitle{Final Results: 3,077x Faster}
+
+  \begin{lstlisting}[language=bash]
+$ benchstat benchmark.txt benchmark3.txt
+
+CalculateResult-12  2545ms -> 0.83ms     -99.97%
+                    54 GB  -> 1 MB       -100.00%
+                    330k   -> 1 alloc    -100.00%
+  \end{lstlisting}
+
+  \vspace{0.3cm}
+  \begin{center}
+    \begin{tabular}{l r r r}
+      \hline
+      \textbf{Version} & \textbf{Time} & \textbf{Memory} & \textbf{Allocs} \\
+      \hline
+      v0: naive \texttt{+=} & 2,545 ms & 50.7 GB & 329,600 \\
+      v1: strings.Builder & 4.5 ms & 7 MB & 200,000 \\
+      v2: strconv + bytes & 1.6 ms & 5.5 MB & 100,000 \\
+      v3: sync.Pool & \alert{0.83 ms} & \alert{1 MB} & \alert{1} \\
+      \hline
+    \end{tabular}
+  \end{center}
+

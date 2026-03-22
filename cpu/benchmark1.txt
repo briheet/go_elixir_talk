@@ -1,0 +1,16 @@
+goos: darwin
+goarch: arm64
+pkg: cpu
+cpu: Apple M4 Pro
+BenchmarkCalculateResult-12    	     747	   4598539 ns/op	 7646955 B/op	  199987 allocs/op
+BenchmarkCalculateResult-12    	     782	   4572617 ns/op	 7646937 B/op	  199987 allocs/op
+BenchmarkCalculateResult-12    	     799	   4508808 ns/op	 7646916 B/op	  199986 allocs/op
+BenchmarkCalculateResult-12    	     807	   4471264 ns/op	 7646901 B/op	  199987 allocs/op
+BenchmarkCalculateResult-12    	     804	   4462217 ns/op	 7646911 B/op	  199987 allocs/op
+BenchmarkCalculateResult-12    	     812	   4469187 ns/op	 7646900 B/op	  199986 allocs/op
+BenchmarkCalculateResult-12    	     802	   4495154 ns/op	 7646917 B/op	  199986 allocs/op
+BenchmarkCalculateResult-12    	     796	   4480622 ns/op	 7646923 B/op	  199987 allocs/op
+BenchmarkCalculateResult-12    	     804	   4498363 ns/op	 7646903 B/op	  199986 allocs/op
+BenchmarkCalculateResult-12    	     802	   4469689 ns/op	 7646900 B/op	  199986 allocs/op
+PASS
+ok  	cpu	36.717s
