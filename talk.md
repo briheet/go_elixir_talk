@@ -55,6 +55,10 @@ So what do we want from our programs really? Reduce overhead of I/O operations, 
 
 ## Basics and its working
 
+![Datadog](./memory/memory_stack_pointer_datadog.png)
+
+![Datadog](./memory/heap_stuff_memory_datadog.png)
+
 SO essentially when we run a golang project, we allocate sum memory, compute something and output something. Where does all that happen ? Lets take a look at it.
 
 ![Simple program](./memory/short_golang_program_sum.png)
@@ -112,7 +116,7 @@ That’s why you will see there is a branch coming out of BLS below, it calls ru
 So the flow is:
 - R28 = current goroutine (g)
 - MOVD 16(R28), R16 loads g.stackguard0
-- CMP R16, SP checks if the current stack pointer is too close to the guard
+- CMP R16, RSP checks if the current stack pointer is too close to the guard
 - If it’s too close, it calls runtime.morestack to grow the goroutine’s stack
 
 As I said, R28 is the current goroutine in the Go ABI screenshot. So how does a goroutine look like or laid out that 16 offset on R28 (current goroutine) gives us the stack guard value?
@@ -156,7 +160,7 @@ So thats 88 - 56 = 32; (4 * 8)
 
 Hence we can see that the numbers live at stack frame and according to bytes and we know there starting. \
 
-Now till here we can see why our programs in 88 right ? Now lets go ahead.
+Now we can see that our slice data occupies offsets 56–88 in the stack frame (32 bytes for 4 int64s). Now lets go ahead.
 
 +Now let’s look at the loop that sums the slice. This is the inlined `sum`:
 ```asm
@@ -185,7 +189,7 @@ Why the jump before the loop body? It’s a common pattern: initialize `i` and `
 This prevents executing the body once before the first check.
 
 Why `R0<<3`? Each `int` is 8 bytes on 64‑bit, so `index * 8` gives the byte offset.
-![Stack layout](https://tip.golang.org/src/cmd/compile/abi-internal)
+[ABI reference](https://tip.golang.org/src/cmd/compile/abi-internal)
 
 Cool, I hope everything is fine till here. I hope you guys understand :), I can just hope.
 
@@ -194,7 +198,7 @@ If you are into systems and have written C++ or Rust code, or even seen the Data
 The compiler has to fetch it first and the whole flow takes time.
 So when optimising the code we usually keep functions small and inlined (keep functions under cost 80) and reduce escapes to heap. \
 
-But check this out, a normal fmt.Println call does a call to runtime.convT64(SB) which is a call to Static Base. So essentially Static Base is for global symbols and functions. \
+But check this out, a normal fmt.Println call does a call to runtime.convT64(SB). Here `(SB)` means the symbol is addressed relative to the Static Base pseudo-register, which is how Go assembly references global symbols and functions. \
 ![Runtime call pic](./memory/runtime_call_print.png)
 
 But why here? Turns out that calling fmt.Println(answer) causes interface boxing, which often makes the value escape and triggers a call to runtime.convT64.
@@ -218,7 +222,7 @@ So the point here was we can see interface store at
 STP (ZR, ZR), 88(RSP)                // stp xzr, xzr, [sp,#88]
 ```
 
-this at +16 as store for interface is value and its pointer. Hence now we have our RSP at 88 + 16 => 104. Not going into remaining it should be some func calls or so.
+this at +16 as store for interface is value and its pointer. Hence the highest offset used in the frame is 88 + 16 => 104. The remaining 8 bytes (up to the 112-byte frame) account for alignment or other bookkeeping.
 
 ## Profiling
 
@@ -226,7 +230,7 @@ this at +16 as store for interface is value and its pointer. Hence now we have o
 
 CPU profiling is measuring where your program spends CPU time. It records which functions and lines consume the most CPU cycles, so you know what to optimize.
 
-Lets start profiling some code and see what we have. I have added the code for this section on github at [Here](github.com/briheet/go_elixir_talk)
+Lets start profiling some code and see what we have. I have added the code for this section on github at [Here](https://github.com/briheet/go_elixir_talk)
 
 So here is our golang program
 
@@ -724,7 +728,7 @@ func calculateResult(num int) string {
 }
 ```
 
-What the helly, how can you i do this. So essentailly we can use a bufferPool, get the buf, use it to dump items, ints, use unsafe for string and return the buf. I would say
+What the helly, how can you i do this. So essentailly we can use a bufferPool, get the buf, use it to dump items, ints, convert to string with `string(buf)` (a safe copy) and return the buf. I would say
 this is not a hot path hence this is a bit overkill but `performance nerds looks for performance everwhere ;)`
 
 TODO: Please add simd stuff here.
